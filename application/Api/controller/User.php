@@ -685,7 +685,9 @@ class User extends Controller{
         }
     }
 
-
+public function test(){
+        echo 3;
+}
 
     /**
      * 推广统计(税收统计)
