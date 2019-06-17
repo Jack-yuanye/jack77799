@@ -1,0 +1,565 @@
+{extend name="common/base" /}
+
+{block name="title"}{/block}
+{block name="content"}
+<div class="layui-card">
+    <div class="layui-card-header layuiadmin-card-header-auto">
+        <h2>结算账户设置</h2>
+    </div>
+
+    <div class="layui-card-body">
+        {if condition="$proxy.check_pass neq ''"}
+        <form action="checkResetPassword" method="get" class="layui-form" id="addProxy">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">银行卡账号</label>
+                    <div class="layui-input-inline">
+                        <input id="cardAccount" type="text" class="layui-input"
+                               value="{$bankinfo.cardaccount}"
+                               name="cardAccount"
+                               placeholder="请输入银行卡账号"
+                        />
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">开户行</label>
+                    <div class="layui-input-inline">
+                        <select class="layui-form-select" id="bank" name="bank" >
+                            <option value="-1" >请选择开户行...</option>
+
+                            <option value="ICBC" {if condition="$bankinfo.bank eq 'ICBC'"}selected="true"{/if}>中国工商银行</option>
+
+                            <option value="CCB" {if condition="$bankinfo.bank eq 'CCB'"}selected="true"{/if}>中国建设银行</option>
+
+                            <option value="BOC" {if condition="$bankinfo.bank eq 'BOC'"}selected="true"{/if}>中国银行</option>
+
+                            <option value="ABC" {if condition="$bankinfo.bank eq 'ABC'"}selected="true"{/if}>中国农业银行</option>
+
+                            <option value="PSBC" {if condition="$bankinfo.bank eq 'PSBC'"}selected="true"{/if}>中国邮政储蓄银行</option>
+
+                            <option value="CMB" {if condition="$bankinfo.bank eq 'CMB'"}selected="true"{/if}>招商银行</option>
+
+                            <option value="CNCB" {if condition="$bankinfo.bank eq 'CNCB'"}selected="true"{/if}>中信银行</option>
+
+                            <option value="SPDB" {if condition="$bankinfo.bank eq 'SPDB'"}selected="true"{/if}>浦发银行</option>
+
+                            <option value="CIB" {if condition="$bankinfo.bank eq 'CIB'"}selected="true"{/if}>兴业银行</option>
+
+                            <option value="CMBC" {if condition="$bankinfo.bank eq 'CMBC'"}selected="true"{/if}>中国民生银行</option>
+
+                            <option value="CEB" {if condition="$bankinfo.bank eq 'CEB'"}selected="true"{/if}>中国光大银行</option>
+
+                            <option value="PAB" {if condition="$bankinfo.bank eq 'PAB'"}selected="true"{/if}>平安银行</option>
+
+                            <option value="HXB" {if condition="$bankinfo.bank eq 'HXB'"}selected="true"{/if}>华夏银行</option>
+
+                            <option value="BOB" {if condition="$bankinfo.bank eq 'BOB'"}selected="true"{/if}>北京银行</option>
+
+                            <option value="CGB" {if condition="$bankinfo.bank eq 'CGB'"}selected="true"{/if}>广发银行</option>
+
+                            <option value="SHB" {if condition="$bankinfo.bank eq 'SHB'"}selected="true"{/if}>上海银行</option>
+
+                            <option value="BCM" {if condition="$bankinfo.bank eq 'BCM'"}selected="true"{/if}>交通银行</option>
+
+
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">姓名</label>
+                    <div class="layui-input-inline">
+                        <input id="name" type="text" class="layui-input"
+                               value="{$bankinfo.name}" name="name"
+                               placeholder="请输入持卡人姓名"
+                        />
+                    </div>
+                </div>
+            <div class="layui-form-item">
+            <label class="layui-form-label">银行卡地区</label>
+            <div class="layui-input-inline">
+                <select id="province" name="province" lay-filter="province">
+                    <option value="">请选择省</option>
+                </select>
+            </div>
+            <div class="layui-input-inline" style="display: none;">
+                <select id="city" name="city" lay-filter="city">
+                    <option value="">请选择市</option>
+                </select>
+            </div>
+            </div>
+{/if}
+
+            {if($proxy.check_pass eq '')}
+            <div class="layui-form-item">
+            <div class="layui-input-block">
+                <a type="button" class="layui-btn"
+                   href="retrievePassword">请先设置结算密码</a>
+            </div>
+            </div>
+            {else /}
+            <div class="layui-form-item">
+                <label class="layui-form-label">结算密码</label>
+                <div class="layui-input-inline">
+                    <input name="settlementPassword" id="settlementPassword"
+                           placeholder="请输入结算密码" type="password" class="layui-input"
+                           lay-verify="required"/>
+                </div>
+            </div>
+            {/if}
+
+
+
+            {if condition="$proxy.check_pass neq ''"}
+            <!--<div class="layui-form-item">-->
+                <!--<label class="layui-form-label">手机号</label>-->
+                <!--<div class="layui-input-inline">-->
+                    <!--<input type="text" class="layui-input disabled phoneNumForFind" id="phoneNum"-->
+                           <!--value="{$proxy.bind_mobile}" disabled lay-verify="required" />-->
+                <!--</div>-->
+                <!--<div class="layui-input-inline">-->
+                    <!--<button class="layui-btn sendCode" type="button" id="sendit" value='{$proxy.bind_mobile}'>获取验证码</button>-->
+                <!--</div>-->
+
+            <!--</div>-->
+            <!--<div class="layui-form-item">-->
+                <!--<label class="layui-form-label">验证码</label>-->
+                <!--<div class="layui-input-inline">-->
+                    <!--<input type="text" id="code" name="code"-->
+                           <!--placeholder="请输入验证码..." lay-verify="required" autocomplete="off" class="layui-input">-->
+                    <!--&lt;!&ndash;<input type="hidden" id="type" lay-verify="required"/>&ndash;&gt;-->
+                    <!--&lt;!&ndash;<input type="hidden" id="codeMsg" name="codeMsg" lay-verify="required"/>&ndash;&gt;-->
+                <!--</div>-->
+
+            <!--</div>-->
+
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <button class="layui-btn" id="sure" lay-submit lay-filter="safeset-changeMobile">保存修改</button>
+                </div>
+            </div>
+            {/if}
+
+            {if condition="$proxy.bind_mobile eq ''"}
+            <div class="layui-form-item" >
+                <div class="layui-input-block" >
+                    <a type="button" class="layui-btn"
+                       href="bindmobile">请先绑定手机号</a>
+                </div>
+            </div>
+            {/if}
+
+        </form>
+    </div>
+</div>
+
+
+{/block}
+{block name="script"}
+<!-- 全局js -->
+<script src="__JS__/jquery.min.js?v=2.1.4"></script>
+<script src="__JS__/bootstrap.min.js?v=3.3.6"></script>
+<script src="__JS__/cache.js"></script>
+<!-- 自定义js -->
+<script src="__JS__/content.js?v=1.0.0"></script>
+<!-- 区域联动 -->
+<script src="__JS__/distpicker.data.js"></script>
+<script src="__JS__/distpicker.js"></script>
+<!-- 银行卡编码获取 -->
+<script src="__JS__/bankcardinfo.js"></script>
+<!-- Toastr script -->
+<script src="__JS__/toastr.min.js"></script>
+<script src="__JS__/common.js?v=1.0"></script>
+
+<script src="__JS__/iosfit.js"></script>
+<script src="__JS__/city.js"></script>
+<script type="text/javascript">
+    layui.use(['layer','table','form', 'jquery', 'element'],function () {
+        var layer = layui.layer
+            ,form = layui.form
+            ,table = layui.table
+            ,element=layui.element
+            ,$    = layui.$
+            ,$form = $('#addProxy');
+        element.on('tab(dev_tab)', function(data){
+            $(".layui-tab-item").each(function (item) {
+                $(this).removeClass('layui-show');
+                if(item === data.index){
+                    $(this).addClass('layui-show');
+                }
+            });
+        });
+        loadProvince();
+
+        $('#sure').on('click', function(e){
+            e.preventDefault();
+            submitForm();
+        });
+        $('#sendit').on('click' ,function (e) {
+            e.preventDefault();
+            sendCode(this);
+        });
+        cache.initCode('settlementAccountCode');
+
+        var bindType = "ali"
+
+        if (bindType === 'bank') {
+            var bankType = document.getElementById("bankType");
+            changeBindType(bankType);
+        }
+
+        $('#mail').css("display", "none");
+        $('#mobile').css("display", "block");
+
+        var bankBind = {"id":null,"agentId":null,"name":null,"idCard":null,"cardAccount":null,"bank":null,"province":null,"city":null,"bankBranch":null};
+        $('#distPicker').distpicker({
+            autoSelect: false,
+            province: bankBind.province === "" ? "请输入开户行所在省份..." : bankBind.province,
+            city: bankBind.city === "" ? "请输入开户行所在城市..." : bankBind.city
+        });
+
+        function loadProvince() {
+            var proHtml = '';
+            var areaData = Area;
+            for (var i = 0; i < areaData.length; i++) {
+                proHtml += '<option thisname="'+areaData[i].provinceName+'" value="' + areaData[i].provinceCode + '_' + areaData[i].mallCityList.length + '_' + i +'">' + areaData[i].provinceName + '</option>';
+            }
+            //初始化省数据
+            $form.find('select[name=province]').append(proHtml);
+            form.render();
+            form.on('select(province)', function(data) {
+                $form.find('select[name=area]').html('<option value="">请选择县/区</option>').parent().hide();
+                var value = data.value;
+                var d = value.split('_');
+                var code = d[0];
+                var count = d[1];
+                var index = d[2];
+                if (count > 0) {
+                    loadCity(areaData[index].mallCityList);
+                } else {
+                    $form.find('select[name=city]').parent().hide();
+                }
+            });
+        }
+        //加载市数据   '_' + citys[i].mallAreaList.length + '_' + i +
+        function loadCity(citys) {
+            var cityHtml = '';
+            for (var i = 0; i < citys.length; i++) {
+                cityHtml += '<option thisname="'+citys[i].cityName+'" value="' + citys[i].cityCode + '_' + citys[i].mallAreaList.length + '_' + i +'">' + citys[i].cityName + '</option>';
+            }
+            $form.find('select[name=city]').html(cityHtml).parent().show();
+            form.render();
+            form.on('select(city)', function(data) {
+                var value = data.value;
+                var d = value.split('_');
+                var code = d[0];
+                var count = d[1];
+                var index = d[2];
+                if (count > 0) {
+                    loadArea(citys[index].mallAreaList);
+                } else {
+                    $form.find('select[name=area]').parent().hide();
+
+                }
+            });
+        }
+
+
+        function checkPassword() {
+            var settlementPassword = null;
+            if ($('#settlementPassword').val() !== settlementPassword) {
+                layer.msg("结算密码不正确");
+                return false;
+            }
+            var code = null;
+            if ($('#code').val() !== code) {
+                layer.msg("验证码不正确");
+                return false;
+            }
+
+        }
+
+
+        function change(data) {
+            var name = data.name
+            $("#type").val(name);
+
+            $(data).attr("class", "btn btn-primary").siblings().attr("class", "btn btn-default");
+            if (name === 'mail') {
+                $('#mail').css("display", "block");
+                $('#mobile').css("display", "none");
+                return;
+            }
+            $('#mail').css("display", "none");
+            $('#mobile').css("display", "block");
+        }
+
+        function changeBindType(data){
+            var name = data.name
+            $("#type").val(name);
+
+            $(data).attr("class", "btn btn-primary").siblings().attr("class", "btn btn-default");
+            if (name === 'aliType') {
+                var aliTarget = document.getElementById("aliInfo");
+                var bankTarget = document.getElementById("bankInfo");
+
+                aliTarget.style.display='block';
+                bankTarget.style.display='none';
+
+                $('#ali').css("display", "block");
+                $('#bank').css("display", "none");
+                return;
+            }else{
+                var aliTarget = document.getElementById("aliInfo");
+                var bankTarget = document.getElementById("bankInfo")
+
+                aliTarget.style.display='none';
+                bankTarget.style.display='block';
+
+                $('#ali').css("display", "none");
+                $('#bank').css("display", "block");
+            }
+
+        }
+
+        function sendCode(data) {
+            $('#codeMsg').val(data.value);
+            $.ajax({
+                url: "{:url('sms/sendCode2')}",
+                type: 'get',
+                data: {mobile: $('#phoneNum').val()},
+                success: function (response) {
+                    if (response.code !== 0 || response === true) {
+                        layer.msg('发送成功');
+                        cache.setItem('settlementAccountCode',$('#phoneNum').val());
+                        data.setAttribute('id', 'sendCode')
+                        settime();
+                    } else {
+                        layer.msg(response.msg)
+                    }
+                }
+            })
+        }
+
+        var countdown = 120;
+
+        function settime() {
+
+            if (countdown === 0) {
+                $("#sendCode").attr("disabled", false);
+                $("#sendCode").html("获取验证码");
+                countdown = 60;
+                return;
+            } else {
+                $("#sendCode").attr("disabled", true);
+                $("#sendCode").html(countdown+ "秒后可发");
+                countdown--;
+            }
+            setTimeout(function () {
+                    settime(this)
+                }
+                , 1000)
+
+        }
+
+
+        function submitForm() {
+
+//            var aliType = $("#bindali");
+//            var isAlibind = true;
+//            if (aliType.hasClass('layui-this')) {
+//                isAlibind = true
+//            } else {
+//                isAlibind = false
+//            }
+
+            var isAlibind = false;
+            if(isAlibind){
+                if ($('#aliAccount').val() === '') {
+                    layer.msg('支付宝账户不能为空')
+                    return false;
+                }
+                if ($('#realName').val() === '') {
+                    layer.msg('支付宝姓名不能为空')
+                    return false
+                }
+                if ($('#settlementPassword').val() === '') {
+                    layer.msg('结算密码不能为空')
+                    return false
+                }
+            }else{
+                if ($('#cardAccount').val() === '' && valid_credit_card($('#cardAccount').val()) ) {
+                    layer.msg('银行卡账号不能为空')
+                    return false;
+                }
+
+                if( $('#bank').val() == -1){
+                    layer.msg('所选开户行不正确,请检查银行卡号或手动选择开户行')
+                    return false;
+                }
+
+                if ($('#name').val() === '') {
+                    layer.msg('姓名不能为空')
+                    return false
+                }
+
+                if ($('#bank').val() === '') {
+                    layer.msg('开户行不能为空')
+                    return false
+                }
+                if ($('#city').html() === '') {
+                    layer.msg('城市不能为空')
+                    return false
+                }
+                if ($('#province').html() === '') {
+                    layer.msg('省份不能为空')
+                    return false
+                }
+                if ($('#settlementPassword').val() === '') {
+                    layer.msg('结算密码不能为空')
+                    return false
+                }
+            }
+
+//            if ($('#code').val() === '') {
+//                layer.msg('验证码不能为空')
+//                return false
+//            }
+//            if ($('#code').val().length < 4) {
+//                layer.msg('验证码不正确' )
+//                return false
+//            }
+
+            $.ajax({
+                url: isAlibind ? "{:url('Settle/updateSettlementAccount')}":"{:url('Settle/updateSettlementBank')}",
+                // url:"{:url('Settle/updateSettlementAccount')}",
+                data: {
+                    'cardAccount':$('#cardAccount').val(),
+                    'bank':$('#bank').val(),
+                    'name':$('#name').val(),
+                    'city':$('#city').next().find('input').val(),
+                    'province':$('#province').next().find('input').val(),
+                    'settlementPassword':$('#settlementPassword').val(),
+                },
+                method: 'post',
+                success: function (response) {
+                    if (response.code === 1) {
+                        console.log(response);
+                        layer.msg('更新账户信息成功');
+                        cache.removeItem('settlementAccountCode');
+                        cache.createTimeOut()
+                        //$("#exampleModal").modal('hide')
+                        //window.location.href = "{:url('index/main')}";
+                        return;
+                    } else {
+                        if (response.msg) {layer.msg(response.msg)}
+                    }
+                }
+            })
+        }
+
+        function sendMailCode(data) {
+            if ($('#mails').val() === null || $('#mails').val() === '') {
+                layer.msg('请输入邮箱')
+                return
+            }
+            $('#codeMsg').val(data.value);
+            $.ajax({
+                url: "sendMailCode",
+                type: 'get',
+                data: {mail: $('#mails').val()},
+                success: function (response) {
+                    if (response.code !== 0 || response === true) {
+                        $('#sendCode').attr('id', Math.random())
+                        data.setAttribute('id', 'sendCode')
+                        settime(this)
+                        layer.msg('发送成功')
+                    } else {
+                        layer.msg(response.msg)
+                    }
+
+                }
+            })
+        }
+
+        function valid_credit_card(cardNo){
+            var tmp=true,total=0;
+            for(var i=cardNo.length;i>0;i--){
+                var num=cardNo.substring(i,i-1);
+                if(tmp=!tmp,tmp)num=num*2;
+                var gw=num%10;
+                total+=(gw+(num-gw)/10);
+            }
+            return total%10==0;
+        }
+
+        function isIdCardNo(num)
+        {
+            num = num.toUpperCase();
+            //身份证号码为15位或者18位，15位时全为数字，18位前17位为数字，最后一位是校验位，可能为数字或字符X。
+            if (!(/(^\d{15}$)|(^\d{17}([0-9]|X)$)/.test(num))) {
+                layer.msg('输入的身份证号长度不对，或者号码不符合规定！\n15位号码应全为数字，18位号码末位可以为数字或X。');
+                return false;
+            }
+            //校验位按照ISO 7064:1983.MOD 11-2的规定生成，X可以认为是数字10。
+            //下面分别分析出生日期和校验位
+            var len, re;
+            len = num.length;
+            if (len == 15) {
+                re = new RegExp(/^(\d{6})(\d{2})(\d{2})(\d{2})(\d{3})$/);
+                var arrSplit = num.match(re);
+
+                //检查生日日期是否正确
+                var dtmBirth = new Date('19' + arrSplit[2] + '/' + arrSplit[3] + '/' + arrSplit[4]);
+                var bGoodDay;
+                bGoodDay = (dtmBirth.getYear() == Number(arrSplit[2])) && ((dtmBirth.getMonth() + 1) == Number(arrSplit[3])) && (dtmBirth.getDate() == Number(arrSplit[4]));
+                if (!bGoodDay) {
+                    return false;
+                }
+                else {
+                    //将15位身份证转成18位
+                    //校验位按照ISO 7064:1983.MOD 11-2的规定生成，X可以认为是数字10。
+                    var arrInt = new Array(7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2);
+                    var arrCh = new Array('1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2');
+                    var nTemp = 0, i;
+                    num = num.substr(0, 6) + '19' + num.substr(6, num.length - 6);
+                    for(i = 0; i < 17; i ++) {
+                        nTemp += num.substr(i, 1) * arrInt[i];
+                    }
+                    num += arrCh[nTemp % 11];
+                    return true;
+                }
+            }
+            if (len == 18) {
+                re = new RegExp(/^(\d{6})(\d{4})(\d{2})(\d{2})(\d{3})([0-9]|X)$/);
+                var arrSplit = num.match(re);
+
+                //检查生日日期是否正确
+                var dtmBirth = new Date(arrSplit[2] + "/" + arrSplit[3] + "/" + arrSplit[4]);
+                var bGoodDay;
+                bGoodDay = (dtmBirth.getFullYear() == Number(arrSplit[2])) && ((dtmBirth.getMonth() + 1) == Number(arrSplit[3])) && (dtmBirth.getDate() == Number(arrSplit[4]));
+                if (!bGoodDay) {
+                    return false;
+                }
+                else {
+                    //检验18位身份证的校验码是否正确。
+                    //校验位按照ISO 7064:1983.MOD 11-2的规定生成，X可以认为是数字10。
+                    var valnum;
+                    var arrInt = new Array(7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2);
+                    var arrCh = new Array('1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2');
+                    var nTemp = 0, i;
+                    for(i = 0; i < 17; i ++) {
+                        nTemp += num.substr(i, 1) * arrInt[i];
+                    }
+                    valnum = arrCh[nTemp % 11];
+                    if (valnum != num.substr(17, 1)) {
+                        return false;
+                    }
+                    return true;
+                }
+            }
+            return false;
+        }
+
+    });
+</script>
+{/block}

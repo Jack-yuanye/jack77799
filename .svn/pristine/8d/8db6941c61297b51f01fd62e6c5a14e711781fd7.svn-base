@@ -1,0 +1,99 @@
+<?php
+namespace app\manage\controller;
+
+use app\manage\controller\Base;
+use think\Db;
+use think\model;
+use think\Paginator;
+
+class Template extends Base{
+
+    public function _initialize() {
+        $roleid = session("RoleId");
+        if($roleid!=1){
+            $this->error('您没有权限','index/index');
+        }
+    }
+    public function index(){
+//        $proxy_id = session("proxy_id");
+//        //查询满足要求的总的记录数
+//        $list= Db::name("template")->order('id desc ')->paginate(3);
+//        $this->assign('list',$list);
+//        //赋值分页输出
+//        //$this->assign("status",$status);
+        return $this->fetch();
+    }
+
+    public function getIndex()
+    {
+        $page  = intval(input('page')) > 0 ? intval(input('page')) : 1;
+        $limit = intval(input('limit')) > 0 ? intval(input('limit')) : 10;
+        $proxy_id     = session("proxy_id");
+        $list = Db::table('template')->order('id desc ')->page($page, $limit)->select();
+        $count = Db::table('template')->count();
+        return json(['code' => 0, 'data' => $list, 'count' => $count]);
+    }
+
+
+    public function getTemplate(){
+        $data = Db::name("template")->where('isdel',0)->select();
+        $ret = array();
+        $num = sizeof($data);
+        foreach($data as $key=>$val){
+            $ret['id']=$val["id"];
+            $ret['num']=$num;
+            $ret['path']=$val["template_image"];
+            $ret['x']=$val["x"];
+            $ret['y']=$val["y"];
+            $ret['isDel']=$val["isdel"];
+        }
+        return json($ret);
+    }
+
+    public function resetpromotionsetting()
+    {
+        $page = input('page');
+        $limit = 1;
+
+        $proxyList = Db::name('proxy')->page($page, $limit)->select();
+        if (!$proxyList) {
+            return json(['code' => 1]);
+        } else {
+            foreach ($proxyList as $proxy) {
+                $proxy_id = $proxy['code'];
+                //缩小二维码
+                $target =$filename ="./public/upload/Qrcode/".$proxy_id.".png";
+                thrum($target, 230,230, $target);
+                for ($templateId = 1; $templateId<=6; $templateId++) {
+                    $usertemp = new \app\admin\model\UserTemplate();
+                    $usertemp->Qrcode(session("proxy_id"));
+                    $template = Db::name("template")->where("template_code",$templateId)->find();
+                    if($template){
+                        $filename ="./public/upload/Qrcode/proxy_".$proxy_id."_".$templateId.".png";
+                        $source = "./".$template["template_image"];//str_replace("/public/",);
+                        combinePic($source,$target,$template["x"],$template["y"],$filename);
+
+                        $qrcode_url =str_replace("./","/",$filename);
+                        $data = array(
+                            "template_code" => $template['template_code'],
+                            "template_name" => $template['template_name'],
+                            "qrcode" => $qrcode_url,
+                            "image_url" => $qrcode_url,
+                            "descript" => date('Y-m-d H:i:s').'生成',
+                            "down_url" => $template['distribute_url'] . urlencode(compile($proxy_id))
+                        );
+                        //使用微信地址
+                        if (config('useshorturl') === true) {
+                            $data['down_url'] = file_get_contents(config('shorturl').$proxy_id) ? file_get_contents(config('shorturl').$proxy_id) : '';
+                        }
+                        Db::name("user_template")->where("proxy_id",$proxy_id)->where('template_code', $templateId)->update($data);
+                    }
+                }
+            }
+        }
+    }
+
+
+
+
+}

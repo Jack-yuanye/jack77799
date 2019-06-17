@@ -1,0 +1,352 @@
+<?php
+
+namespace app\manage\controller;
+
+use think\Db;
+use app\manage\controller\Base;
+use think\session;
+
+class Distribute extends Base
+{
+    public function _initialize()
+    {
+        $roleid = session("RoleId");
+        if ($roleid != 1) {
+            $this->error('您没有权限', 'index/index');
+        }
+    }
+
+    /**
+     * 推广统计
+     */
+    public function index()
+    {
+        $agentid  = input("agentId");
+        $regstart = input("startTime");
+        $regend   = input("endTime");
+        $month    = input("month");
+        $proxy    = session("proxy");
+
+        $where = array();
+        if ($agentid) {
+            $where['a.parent_id']  = $agentid;
+            //$where['a.parent_id'] = $proxy['code'];
+        }
+
+        if (!empty($regstart)) {
+            if (!empty($regend)) {
+                $where['a.day'] = array(array('egt', $regstart), array('elt', $regend));
+            } else {
+                $where['a.day'] = array('egt', $regstart);
+            }
+        }
+
+        if (!$month) {
+            $list = Db::name('spreadsum')
+                ->alias('a')
+                ->field('a.day time,a.parent_id,sum(a.paynum) paynum, sum(a.bindnum) bindnum,sum(a.regnum) regnum,sum(a.totaltax) totaltax,sum(a.checknum) checknum,b.nickname')
+                ->join('proxy b', ' a.parent_id=b.code ', "LEFT")
+                ->where($where)
+                ->order('a.day desc')
+                ->group('a.day, a.parent_id')
+                ->paginate(5)
+                ->each(function ($item, $key) {
+                    $children = Db::name('spreadsum')
+                        ->alias('c')
+                        ->field('c.day time,c.proxy_id,c.paynum,c.bindnum,c.regnum,c.totaltax,c.checknum,d.nickname')
+                        ->join('proxy d', ' c.proxy_id=d.code ', "LEFT")
+                        ->where([
+                            'c.day' => $item['time'],
+                            'c.parent_id' => $item['parent_id']
+                        ])
+                        ->select();
+
+                    $item['children'] = $children;
+                    $item["rows"]     = count($children) + 1;
+                    return $item;
+                });
+        } else {
+            $list = Db::name('spreadsum')
+                ->alias('a')
+                ->field('a.month time,a.parent_id,sum(a.paynum) paynum, sum(a.bindnum) bindnum,sum(a.regnum) regnum,sum(a.totaltax) totaltax,sum(a.checknum) checknum,b.nickname')
+                ->join('proxy b', ' a.parent_id=b.code ', "LEFT")
+                ->where($where)
+                ->order('a.month desc')
+                ->group('a.month, a.parent_id')
+                ->paginate(10)
+                ->each(function ($item, $key) {
+                    $children = Db::name('spreadsum')
+                        ->alias('c')
+                        ->field('c.month time,c.proxy_id,sum(c.paynum) paynum,sum(c.bindnum) bindnum,sum(c.regnum) regnum,sum(c.totaltax) totaltax,sum(c.checknum) checknum,d.nickname')
+                        ->join('proxy d', ' c.proxy_id=d.code ', "LEFT")
+                        ->where([
+                            'c.month' => $item['time'],
+                            'c.parent_id' => $item['parent_id']
+                        ])
+                        ->group('c.month,c.proxy_id')
+                        ->select();
+
+                    $item['children'] = $children;
+                    $item["rows"]     = count($children) + 1;
+                    return $item;
+                });
+        }
+
+        $this->assign('list', $list);
+        $this->assign("agentid", $agentid);
+        $this->assign("regstart", $regstart);
+        $this->assign("regend", $regend);
+        $this->assign("proxy", $proxy);
+        $this->assign("month", $month);
+        return $this->fetch('distribute/index');
+
+    }
+
+    /*
+     * 收入统计
+     */
+//    public function incomeSum()
+//    {
+//
+//        $agentid   = input("agentId");
+//        $starttime = input("startTime");
+//        $endtime   = input("endTime");
+//        $month     = input("month");
+//
+//
+//        $where    = array();
+//        $strwhere = " 1=1 ";
+//        if (!empty($agentid)) {
+//            $where['proxy_id'] = $agentid;
+//            $strwhere          .= " and proxy_id='" . $agentid . "'";
+//        }
+//
+//
+//        if (!empty($starttime)) {
+//            if (!empty($endtime)) {
+//                $where['addtime'] = array(array('gt', $starttime), array('lt', $endtime));
+//                $strwhere         .= " and addtime>'" . $starttime . "' and addtime<='" . $endtime . "'";
+//            } else {
+//                $where['addtime'] = array('gt', $starttime);
+//                $strwhere         .= " and addtime>'" . $starttime . "'";
+//            }
+//        }
+//
+//        $PlayerOrder = Model("PlayerOrder");
+//        if (empty($month)) {
+//            $listdata = $PlayerOrder
+//                ->field(" date_format(`addtime`,'%Y-%m-%d') dt,sum(total_tax) as totaltax")
+//                ->where($where)
+//                ->whereor($strwhere)
+//                ->group("date_format(`addtime`,'%Y-%m-%d')  ")
+//                ->order("dt desc")
+//                ->paginate()
+//                ->each(function ($item, $key) {
+//                    $select_id = session("proxy_id");
+//                    $child     = Db::name("playerorder")
+//                        ->field("date_format(`addtime`,'%Y-%m-%d') as cdate,sum(total_tax) as total, a.proxy_id,b.nickname,b.percent")
+//                        ->alias('a')->join('proxy b', ' a.proxy_id=b.code ', "LEFT")
+//                        ->where(" date_format(`addtime`,'%Y-%m-%d')='" . $item['dt'] . "' and a.parent_id='" . $select_id . "' ")
+//                        ->group(" a.proxy_id")->select();
+//
+//
+//                    $child0 = Db::name("playerorder")
+//                        ->field("date_format(`addtime`,'%Y-%m-%d') as cdate,sum(total_tax) as total, a.proxy_id,b.nickname,b.percent")
+//                        ->alias('a')->join('proxy b', ' a.proxy_id=b.code ', "LEFT")
+//                        ->where(" date_format(`addtime`,'%Y-%m-%d')='" . $item['dt'] . "' and a.proxy_id='" . $select_id . "' ")
+//                        ->group(" a.proxy_id")->select();
+//
+//                    $child         = array_merge($child0, $child);
+//                    $item['child'] = $child;
+//                    $item["rows"]  = count($child) + 1;
+//                    $totaltax      = 0;
+//                    $mytax         = 0;
+//                    foreach ($child as $key => $value) {
+//                        $totaltax = $totaltax + ($value["total"] * $value["percent"]) / 100;
+//                        if ($value['proxy_id'] == $select_id) {
+//                            $mytax = $mytax + ($value["total"] * $value["percent"]) / 100;
+//                        } else {
+//                            $proxy     = session("proxy");
+//                            $mypercent = $proxy['percent'] - $value["percent"];
+//                            $mytax     = $mytax + ($value["total"] * $mypercent / 100);
+//                        }
+//                    }
+//                    $item["mytax"] = $mytax;
+//                    $item["ttax"]  = $totaltax;
+//
+//                });
+//        } else {
+//
+//            $listdata = $PlayerOrder
+//                ->field(" date_format(`addtime`,'%Y-%m') dt,sum(total_tax) as totaltax")
+//                ->where($where)
+//                ->whereor($strwhere)
+//                ->group("date_format(`addtime`,'%Y-%m')  ")
+//                ->order("dt desc")
+//                ->paginate()
+//                ->each(function ($item, $key) {
+//                    $child = Db::name("playerorder")
+//                        ->field("date_format(`addtime`,'%Y-%m') as cdate,sum(total_tax) as total, a.proxy_id,b.nickname,b.percent")
+//                        ->alias('a')->join('proxy b', ' a.proxy_id=b.code ', "LEFT")
+//                        ->where(" date_format(`addtime`,'%Y-%m')='" . $item['dt'] . "'")
+//                        ->group(" a.proxy_id")->select();
+//
+//
+//                    $child0 = Db::name("playerorder")
+//                        ->field("date_format(`addtime`,'%Y-%m') as cdate,sum(total_tax) as total, a.proxy_id,b.nickname,b.percent")
+//                        ->alias('a')->join('proxy b', ' a.proxy_id=b.code ', "LEFT")
+//                        ->where(" date_format(`addtime`,'%Y-%m')='" . $item['dt'] . "'")
+//                        ->group(" a.proxy_id")->select();
+//
+//                    $child         = array_merge($child0, $child);
+//                    $item['child'] = $child;
+//                    $item["rows"]  = count($child) + 1;
+//                    $totaltax      = 0;
+//                    $mytax         = 0;
+//                    foreach ($child as $key => $value) {
+//                        $totaltax = $totaltax + ($value["total"] * $value["percent"]) / 100;
+//                        if ($value['proxy_id'] == 0) {// $select_id) {
+//                            $mytax = $mytax + ($value["total"] * $value["percent"]) / 100;
+//                        } else {
+//                            $proxy     = session("proxy");
+//                            $mypercent = $proxy['percent'] - $value["percent"];
+//                            $mytax     = $mytax + ($value["total"] * $mypercent / 100);
+//                        }
+//                    }
+//                    $item["mytax"] = $mytax;
+//                    $item["ttax"]  = $totaltax;
+//
+//                });
+//
+//
+//        }
+//
+//        // print_r($listdata);
+//
+//
+//        $this->assign("agentid", $agentid);
+//        $this->assign("starttime", $starttime);
+//        $this->assign("endtime", $endtime);
+//        $this->assign('list', $listdata);
+//        return $this->fetch('distribute/incomeSum');
+//    }
+
+
+    /*
+     * 收入明细
+     */
+    public function incomeDetail()
+    {
+        $gamerId  = input("gamerId");
+        $gameType = input("gameType");
+        $startime = input("startTime");
+        $endTime  = input("endTime");
+        $where    = array();
+        $strwhere = " 1=1 ";
+        if (!empty($gamerId)) {
+            $where["a.userid"] = $gamerId;
+            $strwhere          .= " and a.userid=" . $gamerId;
+        }
+
+        if (!empty($gameType)) {
+            $where["a.gameid"] = $gameType;
+            $strwhere          .= " and a.gameid=" . $gameType;
+        }
+
+        if (!empty($startime)) {
+            if (!empty($endTime)) {
+                $where['a.addtime'] = array(array('gt', $startime), array('lt', $endTime));
+                $strwhere           .= " and a.addtime>'" . $startime . "' and a.addtime<='" . $endTime . "'";
+            } else {
+                $where['a.addtime'] = array('gt', $startime);
+                $strwhere           .= " and a.addtime>'" . $startime . "'";
+            }
+        }
+
+        $list = Db::name("playerorder")->alias('a')
+            ->field("a.proxy_id,a.userid,a.gameid,a.game,a.total_tax,b.percent,a.createtime")
+            ->join(" proxy b ", " a.proxy_id=b.code", "LEFT")
+            ->where($where)
+            ->whereor($strwhere)
+            ->paginate();
+
+        $this->assign("list", $list);
+        $this->assign("gamerid", $gamerId);
+        $this->assign("starttime", $startime);
+        $this->assign("endTime", $endTime);
+        $this->assign("gameType", $gameType);
+        return $this->fetch('distribute/incomedetail');
+    }
+
+
+    public function playerDetail()
+    {
+
+        $gamerId  = input("gamerId");
+        $startime = input("startTime");
+        $endTime  = input("endTime");
+
+        $startime1 = $startime ? $startime . " 00:00:00" : '';
+        $endTime1  = $endTime ? $endTime . " 23:59:59" : '';
+        $where     = array();
+        if (!empty($gamerId)) {
+            $where["a.userid"] = $gamerId;
+        }
+
+        if (!empty($startime1)) {
+            $startime1 = str_replace("-", "/", $startime1);
+            $endTime1  = str_replace("-", "/", $endTime1);
+            if (!empty($endTime)) {
+                $where['a.regtime'] = array(array('gt', $startime1), array('lt', $endTime1));
+            } else {
+                $where['a.regtime'] = array('gt', $startime1);
+            }
+        }
+
+
+        if ($where) {
+            $list = Db::name("playerall")->alias('a')
+                ->field(" a.proxy_id,a.userid,b.nickname as proxyname,a.nickname,a.ismobile,a.regtime,a.addtime")
+                ->join(" proxy b ", " a.proxy_id=b.code", "LEFT")
+                ->where($where)
+                ->order("a.regtime desc")
+                ->paginate('15');
+        } else {
+            $list = Db::name("playerall")->alias('a')
+                ->field(" a.proxy_id,a.userid,b.nickname as proxyname,a.nickname,a.ismobile,a.regtime,a.addtime")
+                ->join(" proxy b ", " a.proxy_id=b.code", "LEFT")
+                ->order("a.regtime desc")
+                ->paginate('15');
+        }
+
+
+        $this->assign("list", $list);
+        $this->assign("gamerid", $gamerId);
+        $this->assign("starttime", $startime);
+        $this->assign("endTime", $endTime);
+        return $this->fetch();
+    }
+
+
+    //修改玩家的代理ID
+    public function setPlayerProxyId()
+    {
+        $userId  = input("userid");
+        $proxyId = input("proxyid");
+        if (!$userId || !$proxyId || !is_numeric($userId)) {
+            return $this->showmsg(0, "参数有误", '', '', null);
+        }
+        $distributeModel = new \app\manage\model\Distribute();
+        $ret             = $distributeModel->setProxyId($proxyId, $userId);
+        if ($ret->data == "True") {
+            Db::name('thirdplayerall')->where('userid', $userId)->update(['parentid' => $proxyId]);
+            Db::name('playerall')->where('userid', $userId)->update(['proxy_id' => $proxyId]);
+            return $this->showmsg(1, "更新成功", '', '', null);
+        } else {
+            return $this->showmsg(0, "更新失败", '', '', null);
+        }
+
+    }
+
+
+}
